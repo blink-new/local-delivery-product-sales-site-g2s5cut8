@@ -5,13 +5,18 @@ import { ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getProductById } from '../data/products';
 import { useCartStore } from '../store/cartStore';
+import CartPreview from '../components/CartPreview';
+import { toast } from 'react-hot-toast';
 
 const ProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const product = getProductById(id || '');
   const [quantity, setQuantity] = useState(1);
-  const addToCart = useCartStore((state) => state.addItem);
+  const [showCartPreview, setShowCartPreview] = useState(false);
+  const { addItem, items } = useCartStore();
+  
+  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   if (!product) {
     return (
@@ -29,8 +34,14 @@ const ProductPage = () => {
   }
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    navigate('/cart');
+    addItem(product, quantity);
+    toast.success(`Added ${quantity} ${product.name} to cart`);
+    setShowCartPreview(true);
+    
+    // Auto-hide cart preview after 4 seconds
+    setTimeout(() => {
+      setShowCartPreview(false);
+    }, 4000);
   };
 
   const decreaseQuantity = () => {
@@ -45,16 +56,32 @@ const ProductPage = () => {
 
   return (
     <div className="page-container slide-up">
-      <Link to="/" className="inline-block mb-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="-ml-2 text-gray-600"
-        >
-          <ChevronLeft size={20} />
-          Back to Products
-        </Button>
-      </Link>
+      <div className="flex justify-between items-center mb-4">
+        <Link to="/" className="inline-block">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="-ml-2 text-gray-600"
+          >
+            <ChevronLeft size={20} />
+            Back
+          </Button>
+        </Link>
+        
+        {cartItemCount > 0 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="relative text-primary-600"
+            onClick={() => setShowCartPreview(!showCartPreview)}
+          >
+            <ShoppingCart size={22} />
+            <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {cartItemCount}
+            </span>
+          </Button>
+        )}
+      </div>
 
       <div className="bg-white rounded-lg overflow-hidden shadow-sm">
         <img 
@@ -95,15 +122,30 @@ const ProductPage = () => {
             </div>
           </div>
           
-          <Button 
-            className="w-full mt-6 bg-primary-600 hover:bg-primary-700"
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="mr-2" size={18} />
-            Add to Cart
-          </Button>
+          <div className="flex gap-2 mt-6">
+            <Button 
+              className="flex-1 bg-primary-600 hover:bg-primary-700"
+              onClick={handleAddToCart}
+            >
+              <ShoppingCart className="mr-2" size={18} />
+              Add to Cart
+            </Button>
+            
+            <Button 
+              variant="outline"
+              className="flex-1 border-primary-600 text-primary-600"
+              onClick={() => navigate('/cart')}
+            >
+              View Cart
+            </Button>
+          </div>
         </div>
       </div>
+      
+      <CartPreview 
+        show={showCartPreview} 
+        onClose={() => setShowCartPreview(false)} 
+      />
     </div>
   );
 };

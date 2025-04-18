@@ -1,16 +1,21 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { products, categories } from '../data/products';
 import { useCartStore } from '../store/cartStore';
+import CartPreview from '../components/CartPreview';
+import { toast } from 'react-hot-toast';
 
 const HomePage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const addToCart = useCartStore((state) => state.addItem);
+  const [showCartPreview, setShowCartPreview] = useState(false);
+  const { addItem, items } = useCartStore();
+  
+  const cartItemCount = items.reduce((total, item) => total + item.quantity, 0);
 
   const filteredProducts = products
     .filter(product => 
@@ -21,10 +26,37 @@ const HomePage = () => {
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+  const handleAddToCart = (product: typeof products[0]) => {
+    addItem(product);
+    toast.success(`Added ${product.name} to cart`);
+    setShowCartPreview(true);
+    
+    // Auto-hide cart preview after 4 seconds
+    setTimeout(() => {
+      setShowCartPreview(false);
+    }, 4000);
+  };
+
   return (
     <div className="page-container">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-primary-700 mb-2">Local Fresh Market</h1>
+      <header className="mb-6 relative">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-primary-700 mb-2">Local Fresh Market</h1>
+          
+          {cartItemCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative text-primary-600"
+              onClick={() => setShowCartPreview(!showCartPreview)}
+            >
+              <ShoppingCart size={22} />
+              <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {cartItemCount}
+              </span>
+            </Button>
+          )}
+        </div>
         <p className="text-gray-600">Fresh products delivered to your door</p>
         
         <div className="relative mt-4">
@@ -81,9 +113,7 @@ const HomePage = () => {
               </Link>
               <div className="px-3 pb-3">
                 <Button 
-                  onClick={() => {
-                    addToCart(product);
-                  }}
+                  onClick={() => handleAddToCart(product)}
                   className="w-full text-xs bg-primary-600 hover:bg-primary-700"
                   size="sm"
                 >
@@ -94,6 +124,11 @@ const HomePage = () => {
           ))}
         </div>
       )}
+      
+      <CartPreview 
+        show={showCartPreview} 
+        onClose={() => setShowCartPreview(false)} 
+      />
     </div>
   );
 };
