@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getProductById } from '../data/products';
@@ -45,15 +45,16 @@ const ProductPage = () => {
 
   return (
     <div className="page-container slide-up">
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="mb-4 -ml-2 text-gray-600"
-        onClick={() => navigate(-1)}
-      >
-        <ChevronLeft size={20} />
-        Back
-      </Button>
+      <Link to="/" className="inline-block mb-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="-ml-2 text-gray-600"
+        >
+          <ChevronLeft size={20} />
+          Back to Products
+        </Button>
+      </Link>
 
       <div className="bg-white rounded-lg overflow-hidden shadow-sm">
         <img 
